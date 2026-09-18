@@ -1,2 +1,2 @@
 # simple-compass
-An simple compass for WoW Forever
+A simple compass for WoW Forever
