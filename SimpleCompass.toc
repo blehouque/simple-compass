@@ -1,7 +1,7 @@
 ## Interface: 16001
 ## Name: Simple Compass
 ## Author: Perlin
-## Version: 1.0.0
+## Version: 1.1.0
 
 ## Notes: Lightweight compass addon
 ## SavedVariables: SimpleCompassDB
