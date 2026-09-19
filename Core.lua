@@ -1,6 +1,25 @@
 local ADDON_NAME = ...
 
 --------------------------------------------------
+--- Constants
+--------------------------------------------------
+
+local BAR_WIDTH = 220
+local BAR_HEIGHT = 40
+local DEGREES_VISIBLE = 120
+local MARKER_STEP = 15
+local CARDINALS = {
+    [0]   = "S",
+    [45]  = "SE",
+    [90]  = "E",
+    [135] = "NE",
+    [180] = "N",
+    [225] = "NO",
+    [270] = "O",
+    [315] = "SO",
+}
+
+--------------------------------------------------
 -- Database
 --------------------------------------------------
 
@@ -54,16 +73,58 @@ local function GetHeading()
     return DIRECTIONS[index], degrees
 end
 
+local function ComputeOffset(markerAngle, playerAngle)
+
+    local diff = playerAngle - markerAngle
+
+    while diff > 180 do
+        diff = diff - 360
+    end
+
+    while diff < -180 do
+        diff = diff + 360
+    end
+
+    return diff
+end
+
 --------------------------------------------------
 -- Main Frame
 --------------------------------------------------
 
 local frame = CreateFrame("Frame", "SimpleCompassFrame", UIParent)
 
-frame:SetSize(220, 36)
-frame:SetMovable(true)
+frame:SetSize(BAR_WIDTH, BAR_HEIGHT)
+frame:SetMovable(not SimpleCompassDB.locked)
 frame:EnableMouse(true)
 frame:RegisterForDrag("LeftButton")
+
+local center = frame:CreateTexture(nil, "OVERLAY")
+center:SetSize(2, BAR_HEIGHT)
+center:SetColorTexture(1, 0.8, 0, 1)
+center:SetPoint("CENTER")
+
+frame.markers = {}
+for angle = 0, 345, MARKER_STEP do
+
+    local fs = frame:CreateFontString(
+        nil,
+        "OVERLAY",
+        "GameFontNormal"
+    )
+
+    fs.angle = angle
+
+    frame.markers[#frame.markers + 1] = fs
+end
+
+local function GetLabel(angle)
+    if CARDINALS[angle] then
+        return CARDINALS[angle]
+    end
+
+    return "|cff888888·|r"
+end
 
 local function SetPosition()
     frame:ClearAllPoints()
@@ -141,6 +202,44 @@ end)
 local elapsed = 0
 local UPDATE_INTERVAL = 0.05
 
+local function UpdateCompass()
+
+    local facing = GetPlayerFacing()
+
+    if not facing then
+        return
+    end
+
+    local playerAngle = math.deg(facing) % 360
+
+    for _, marker in ipairs(frame.markers) do
+
+        local diff = ComputeOffset(
+            marker.angle,
+            playerAngle
+        )
+
+        if math.abs(diff) <= (DEGREES_VISIBLE / 2) then
+
+            marker:Show()
+
+            local x =
+                (diff / (DEGREES_VISIBLE / 2))
+                * (BAR_WIDTH / 2)
+
+            marker:ClearAllPoints()
+            marker:SetPoint("CENTER", frame, "CENTER", x, 0)
+
+            marker:SetText(
+                GetLabel(marker.angle)
+            )
+
+        else
+            marker:Hide()
+        end
+    end
+end
+
 frame:SetScript("OnUpdate", function(self, delta)
     elapsed = elapsed + delta
 
@@ -150,11 +249,7 @@ frame:SetScript("OnUpdate", function(self, delta)
 
     elapsed = 0
 
-    local direction, degrees = GetHeading()
-
-    self.text:SetText(
-        string.format("%s  %03d°", direction, degrees)
-    )
+    UpdateCompass()
 end)
 
 --------------------------------------------------
