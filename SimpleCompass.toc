@@ -1,9 +1,14 @@
 ## Interface: 16001
 ## Name: Simple Compass
 ## Author: Perlin
-## Version: 1.1.0
+## Version: 1.1.1
 
 ## Notes: Lightweight compass addon
 ## SavedVariables: SimpleCompassDB
 
+Config.lua
+Database.lua
+Direction.lua
+CompassView.lua
+Commands.lua
 Core.lua
